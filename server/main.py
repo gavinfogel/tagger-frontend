@@ -69,3 +69,7 @@ async def ner_tag(request_data: NerTagRequest):
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    
+@app.get("/")
+async def root():
+		return {"message": "NER tagger is running!"}
