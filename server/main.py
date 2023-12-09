@@ -18,16 +18,17 @@ async def startup_event():
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5173"],  # Your frontend origin
+    allow_origins=["*"],  # Your frontend origin
     allow_credentials=True,
     allow_methods=["*"],                      # Allow all methods
     allow_headers=["*"],                      # Allow all headers
 )
 
 # Define the request model
-class SrlTagRequest(BaseModel):
+class NerTagRequest(BaseModel):
     tokens: List[str]
 
+# BIO tagging
 def ner_tagger(tokens):
     # Part-of-speech tagging
     pos_tags = pos_tag(tokens)
@@ -47,12 +48,24 @@ def ner_tagger(tokens):
 
     return ne_tagged_words
 
-@app.post("/srl-tag")
-async def srl_tag(request_data: SrlTagRequest):
+@app.post("/ner-tag")
+async def ner_tag(request_data: NerTagRequest):
     try:
         tokens = request_data.tokens
-        # Return a new list of the same length, filled with the string "O"
-        return {"tags": ner_tagger(tokens)}
+        tags = tokens.copy()
+
+        random_tags = ['B-LOC', 'I-LOC', 'B-PER', 'I-PER', 'B-ORG', 'I-ORG', 'B-MISC', 'I-MISC', 'O']
+
+
+
+        # Overwrite the tags with NER tags
+        for i in range(len(tokens)):
+            # Equal probability of each tag, except for "O" which has a 70% probability
+            tags[i] = random_tags[i%len(random_tags)]
+
+        return { "tags": tags, "tokens": tokens} 
+    
+
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

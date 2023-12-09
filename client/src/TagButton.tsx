@@ -2,16 +2,19 @@ import React from 'react';
 
 interface TagButtonProps {
 	onClick: () => void;
+	disabled?: boolean;
 	loading?: boolean;
 }
 
-export const TagButton = ({ onClick, loading }: TagButtonProps) => {
+export const TagButton = ({ onClick, loading, disabled }: TagButtonProps) => {
 	return (
 		<button
 			className='flex flex-row items-center justify-center bg-gray-100
 			hover:bg-gray-300 transition-all duration-300 px-2 py-1 text-base
-			font-medium space-x-1 text-[#353740] rounded-lg w-[68px]'
-			onClick={onClick}>
+			font-medium space-x-1 text-[#353740] rounded-lg w-[68px]
+			disabled:bg-[#ACACBD]'
+			onClick={onClick}
+			disabled={disabled}>
 			<div className='flex flex-row items-center space-x-1'>
 				{loading ? (
 					<div>Loading</div>

@@ -1,7 +1,30 @@
 #!/usr/bin/env bash
 
-echo "Starting server..."
-cd ./server && uvicorn main:app --reload
-cd ..
-echo "Starting client..."
-cd ./client && bun run dev
+function dev_frontend {
+	echo "Starting frontend server..."
+	(cd ./client && bun run dev)
+	exit 0
+}
+
+function dev_backend {
+	echo "Starting backend server..."
+	(cd ./server && uvicorn main:app --reload)
+	exit 0
+}
+
+# If the first argument is "frontend", then start the frontend server
+if [ "$1" == "frontend" ]; then
+	dev_frontend
+fi
+
+
+# If the first argument is "backend", then start the backend server
+if [ "$1" == "backend" ]; then
+	dev_backend
+fi
+
+# Check if no argument is passed
+if [ -z "$1" ]; then
+	echo "Starting both servers..."
+	dev_frontend & dev_backend && fg
+fi

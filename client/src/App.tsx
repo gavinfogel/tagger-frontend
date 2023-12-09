@@ -1,6 +1,8 @@
 import { ChangeEvent, useRef, useState } from 'react';
 import './App.css';
 import { TagButton } from './TagButton';
+import { BIOTag, TaggedSequence, TaggedToken } from './BIOTagTypes';
+import { TokenDisplay } from './TokenDisplay';
 
 const testSentences = [];
 
@@ -12,10 +14,12 @@ const tokenizeSentence = (sentence: string) => {
 function App() {
 	const [inputSentence, setInputSentence] = useState<string>('');
 
-	const [res, setRes] = useState<string>('');
+	const [previousSequences, setPreviousSequences] = useState<TaggedSequence[]>(
+		[]
+	);
 
 	const makeRequest = async () => {
-		const response = await fetch('http://127.0.0.1:8000/srl-tag', {
+		const response = await fetch('https://tagger-frontend.vercel.app/ner-tag', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -23,10 +27,33 @@ function App() {
 			body: JSON.stringify({ tokens: tokenizedSentence }),
 		});
 		const data = await response.json();
-		setRes(data);
+
+		console.log({ data });
+
+		const tokens = data.tokens as string[];
+		const tags = data.tags as BIOTag[];
+
+		// Loop through each of the tokens, tags together
+		const taggedSequence: TaggedSequence = [];
+		for (let i = 0; i < tokens.length; i++) {
+			taggedSequence.push({
+				token: tokens[i],
+				tag: tags[i],
+			});
+		}
+
+		// Update the list of previous sequences.
+		setPreviousSequences([...previousSequences, taggedSequence]);
 	};
 
 	const handleInputChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+		// Skip newlines and tabs
+		if (event.target.value.includes('\n')) {
+			return;
+		}
+		if (event.target.value.includes('\t')) {
+			return;
+		}
 		setInputSentence(event.target.value);
 	};
 
@@ -38,10 +65,21 @@ function App() {
 	const handleClickOnCustomArea = () => {
 		// When the custom area is clicked, focus the hidden input.
 		if (hiddenInputRef.current) {
-			console.log('Did it work?');
 			hiddenInputRef.current.focus();
 		}
 	};
+
+	const endsInSpace = inputSentence[inputSentence.length - 1] === ' ';
+
+	const handleTagButtonClick = () => {
+		makeRequest();
+		setInputSentence('');
+	};
+
+	// Store the position for the carrot to be placed
+	const [carrotPosition, setCarrotPosition] = useState<number>(0);
+
+	// Get the position of the far
 
 	return (
 		<div className='w-full flex flex-col items-center justify-center text-lg'>
@@ -55,21 +93,39 @@ function App() {
 				<div
 					className='h-min w-[720px] rounded-lg border-2 p-4 flex flex-col'
 					onClick={handleClickOnCustomArea}>
-					<div className='flex flex-row flex-wrap items-center justify-center border'>
+					<div className='flex flex-row flex-wrap items-center'>
 						{tokenizedSentence.map((token, index) => (
-							<span
-								className='border-b border-l border-gray-200 mx-1 mb-2'
-								key={index}>
-								{token}
-							</span>
+							<TokenDisplay
+								tagging={{
+									token,
+									tag: '',
+								}}
+								key={index}
+							/>
 						))}
-						<div className='h-6 w-[2px] bg-black border-black animate-cursor-blink' />
+						<div className='h-6 w-[2px] bg-neutral-900 inline-block' />
 					</div>
 					<div className='w-full mt-4'>
-						<TagButton onClick={makeRequest} />
+						<TagButton onClick={handleTagButtonClick} />
 					</div>
 				</div>
-				<p className='text-sm'>{JSON.stringify(res)}</p>
+				{previousSequences.map((sequence: TaggedToken[], index) => {
+					return (
+						<div
+							className='flex flex-row flex-wrap items-center justify-center border'
+							key={index}>
+							{sequence.map((tokenTagPair, index) => (
+								<TokenDisplay
+									tagging={{
+										token: tokenTagPair.token,
+										tag: tokenTagPair.tag,
+									}}
+									key={index}
+								/>
+							))}
+						</div>
+					);
+				})}
 			</div>
 		</div>
 	);
