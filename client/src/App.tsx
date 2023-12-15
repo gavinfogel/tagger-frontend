@@ -19,7 +19,7 @@ function App() {
 	);
 
 	const makeRequest = async () => {
-		const response = await fetch('https://tagger-frontend.vercel.app/ner-tag', {
+		const response = await fetch('http://127.0.0.1:8000/ner-tag', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

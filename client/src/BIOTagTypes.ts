@@ -23,6 +23,14 @@ export const BIOColorMap: { [key in BIOTag]: string } = {
 	'': 'black', // not yet tagged
 };
 
+export const flattenedBIOColorMap: { [key in BIOTag]: string } = {
+	LOC: 'red',
+	PER: 'blue',
+	ORG: 'green',
+	MISC: 'purple',
+	O: 'gray',
+};
+
 // Must ensure these are the same length
 export type TaggedSequence = TaggedToken[];
 
